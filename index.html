@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghoomar World Record - Photo Frame</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; position: relative; background-color: #F5F5DC; }
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #F5F5DC; }
         .container { margin-top: 20px; }
-        canvas { border: 2px solid #000; margin-top: 10px; max-width: 90vw; max-height: 90vh; }
+        canvas { border: 2px solid #000; margin-top: 10px; cursor: grab; }
         .logo {
             position: absolute;
             top: 10px;
@@ -39,8 +39,11 @@
         let frame = new Image();
         frame.src = 'frame12.png';
 
-        let userPhotoLoaded = false;
         let frameLoaded = false;
+        let imgLoaded = false;
+        let imgX = 100, imgY = 100, imgWidth = 150, imgHeight = 150; // Default size
+        let dragging = false, resizing = false;
+        let offsetX, offsetY;
 
         frame.onload = function () {
             frameLoaded = true;
@@ -52,30 +55,23 @@
             reader.onload = function(e) {
                 img.src = e.target.result;
                 img.onload = function() {
-                    userPhotoLoaded = true;
+                    imgLoaded = true;
                     updateCanvas();
                 };
             };
             reader.readAsDataURL(event.target.files[0]);
         });
 
-        document.getElementById('nameInput').addEventListener('input', function() {
-            updateCanvas();
-        });
+        document.getElementById('nameInput').addEventListener('input', updateCanvas);
 
         function updateCanvas() {
-            if (!frameLoaded) return; // Only draw if frame is loaded
+            if (!frameLoaded) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
 
-            if (userPhotoLoaded) {
-                let imgWidth = 300;
-                let imgHeight = 300;
-                let imgX = (canvas.width - imgWidth) / 2; // Center the image horizontally
-                let imgY = 100; // Adjust vertical position
-
-                ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+            if (imgLoaded) {
+                drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
             }
 
             let userName = document.getElementById('nameInput').value;
@@ -84,6 +80,71 @@
             ctx.textAlign = 'center';
             ctx.fillText(userName, canvas.width / 2, 450);
         }
+
+        function drawRoundedImage(ctx, image, x, y, width, height, radius) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(image, x, y, width, height);
+            ctx.restore();
+        }
+
+        // Mouse event listeners for dragging & resizing
+        canvas.addEventListener("mousedown", function (e) {
+            let rect = canvas.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+
+            if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
+                dragging = true;
+                offsetX = mouseX - imgX;
+                offsetY = mouseY - imgY;
+                canvas.style.cursor = "grabbing";
+            } else if (mouseX > imgX + imgWidth - 20 && mouseY > imgY + imgHeight - 20) {
+                resizing = true;
+                canvas.style.cursor = "nwse-resize";
+            }
+        });
+
+        canvas.addEventListener("mousemove", function (e) {
+            let rect = canvas.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+
+            if (dragging) {
+                imgX = mouseX - offsetX;
+                imgY = mouseY - offsetY;
+                updateCanvas();
+            } else if (resizing) {
+                imgWidth = mouseX - imgX;
+                imgHeight = mouseY - imgY;
+                updateCanvas();
+            } else {
+                if (mouseX > imgX + imgWidth - 20 && mouseY > imgY + imgHeight - 20) {
+                    canvas.style.cursor = "nwse-resize";
+                } else if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
+                    canvas.style.cursor = "grab";
+                } else {
+                    canvas.style.cursor = "default";
+                }
+            }
+        });
+
+        canvas.addEventListener("mouseup", function () {
+            dragging = false;
+            resizing = false;
+            canvas.style.cursor = "grab";
+        });
 
         function downloadImage() {
             let link = document.createElement('a');
