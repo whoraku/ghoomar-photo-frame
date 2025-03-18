@@ -37,13 +37,22 @@
         let ctx = canvas.getContext('2d');
         let img = new Image();
         let frame = new Image();
-        frame.src = 'frame12.png'; // The new frame uploaded
+        frame.src = 'frame12.png';
+
+        let userPhotoLoaded = false;
+        let frameLoaded = false;
+
+        frame.onload = function () {
+            frameLoaded = true;
+            updateCanvas();
+        };
 
         document.getElementById('photoUpload').addEventListener('change', function(event) {
             let reader = new FileReader();
             reader.onload = function(e) {
                 img.src = e.target.result;
                 img.onload = function() {
+                    userPhotoLoaded = true;
                     updateCanvas();
                 };
             };
@@ -55,15 +64,25 @@
         });
 
         function updateCanvas() {
+            if (!frameLoaded) return; // Only draw if frame is loaded
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 20, 100, 460, 300); // Adjust image position and size
-            
+
+            if (userPhotoLoaded) {
+                let imgWidth = 300;
+                let imgHeight = 300;
+                let imgX = (canvas.width - imgWidth) / 2; // Center the image horizontally
+                let imgY = 100; // Adjust vertical position
+
+                ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+            }
+
             let userName = document.getElementById('nameInput').value;
             ctx.font = 'bold 24px Arial';
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
-            ctx.fillText(userName, canvas.width / 2, 450); // Position the name below the photo
+            ctx.fillText(userName, canvas.width / 2, 450);
         }
 
         function downloadImage() {
