@@ -3,14 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nakhrali Ghoomar World Record - Photo Frame</title>
+    <title>Ghoomar World Record - Photo Frame</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
+        body { font-family: Arial, sans-serif; text-align: center; position: relative; }
         .container { margin-top: 20px; }
         canvas { border: 2px solid #000; margin-top: 10px; max-width: 90vw; max-height: 90vh; }
+        .logo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 100px;
+            height: auto;
+        }
     </style>
 </head>
 <body>
+    <img src="logo.png" alt="Logo" class="logo">
     <h1>Rajasthan Yuva Sangh Surat - Ghoomar World Record</h1>
     <h3>Upload your photo and choose a frame</h3>
     <input type="file" id="photoUpload" accept="image/*">
