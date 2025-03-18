@@ -15,19 +15,18 @@
             width: 100px;
             height: auto;
         }
+        .input-field { margin-top: 10px; font-size: 18px; padding: 5px; }
+        .title-image { max-width: 100%; height: auto; margin-bottom: 10px; }
     </style>
 </head>
 <body>
+    <img src="title.jpeg" alt="Event Title" class="title-image">
     <img src="logo.png" alt="Logo" class="logo">
-    <h1>Rajasthan Yuva Sangh Surat - Ghoomar World Record</h1>
-    <h3>Upload your photo and choose a frame</h3>
-    <input type="file" id="photoUpload" accept="image/*">
+    <h3>Enter Your Name, Upload Your Photo and Choose a Frame</h3>
+    
+    <input type="text" id="nameInput" class="input-field" placeholder="Enter your name">
     <br>
-    <select id="frameSelect">
-        <option value="frame1.png">Frame 1</option>
-        <option value="frame2.png">Frame 2</option>
-        <option value="frame3.png">Frame 3</option>
-    </select>
+    <input type="file" id="photoUpload" accept="image/*">
     <br>
     <canvas id="canvas" width="3464" height="3464"></canvas>
     <br>
@@ -38,6 +37,7 @@
         let ctx = canvas.getContext('2d');
         let img = new Image();
         let frame = new Image();
+        frame.src = 'frame12.png'; // The new frame uploaded
 
         document.getElementById('photoUpload').addEventListener('change', function(event) {
             let reader = new FileReader();
@@ -50,15 +50,20 @@
             reader.readAsDataURL(event.target.files[0]);
         });
 
-        document.getElementById('frameSelect').addEventListener('change', function() {
-            frame.src = this.value;
-            frame.onload = updateCanvas;
+        document.getElementById('nameInput').addEventListener('input', function() {
+            updateCanvas();
         });
 
         function updateCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 950, 1100, 1564, 1564); // Adjust image position and size
+            
+            let userName = document.getElementById('nameInput').value;
+            ctx.font = 'bold 100px Arial';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.fillText(userName, canvas.width / 2, 3200); // Position the name below the photo
         }
 
         function downloadImage() {
