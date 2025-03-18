@@ -57,13 +57,13 @@
         function updateCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 950, 1100, 1564, 1564); // Adjust image position and size
+            ctx.drawImage(img, 2150, 2600, 300, 300); // Adjusted to fit 3cm x 3cm square
             
             let userName = document.getElementById('nameInput').value;
-            ctx.font = 'bold 100px Arial';
+            ctx.font = 'bold 50px Arial';
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
-            ctx.fillText(userName, canvas.width / 2, 3200); // Position the name below the photo
+            ctx.fillText(userName, 2300, 2950); // Positioned just below the photo
         }
 
         function downloadImage() {
