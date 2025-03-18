@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghoomar World Record - Photo Frame</title>
+    <title>Nakhrali Ghoomar World Record - Photo Frame</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         .container { margin-top: 20px; }
         canvas { border: 2px solid #000; margin-top: 10px; max-width: 90vw; max-height: 90vh; }
-        #cropContainer { display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -16,19 +15,13 @@
     <h3>Upload your photo and choose a frame</h3>
     <input type="file" id="photoUpload" accept="image/*">
     <br>
-    <div id="cropContainer">
-        <h3>Crop Your Image</h3>
-        <canvas id="cropCanvas" style="border:1px solid #000;"></canvas>
-        <br>
-        <button onclick="confirmCrop()">Confirm Crop</button>
-    </div>
     <select id="frameSelect">
         <option value="frame1.png">Frame 1</option>
         <option value="frame2.png">Frame 2</option>
         <option value="frame3.png">Frame 3</option>
     </select>
     <br>
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" width="3464" height="3464"></canvas>
     <br>
     <button onclick="downloadImage()">Download Image</button>
 
@@ -37,55 +30,28 @@
         let ctx = canvas.getContext('2d');
         let img = new Image();
         let frame = new Image();
-        let cropCanvas = document.getElementById('cropCanvas');
-        let cropCtx = cropCanvas.getContext('2d');
-        let croppedImage = new Image();
 
         document.getElementById('photoUpload').addEventListener('change', function(event) {
             let reader = new FileReader();
             reader.onload = function(e) {
                 img.src = e.target.result;
                 img.onload = function() {
-                    cropCanvas.width = img.width * 0.5;
-                    cropCanvas.height = img.height * 0.5;
-                    cropCtx.drawImage(img, 0, 0, cropCanvas.width, cropCanvas.height);
-                    document.getElementById('cropContainer').style.display = 'block';
+                    updateCanvas();
                 };
             };
             reader.readAsDataURL(event.target.files[0]);
         });
 
-        function confirmCrop() {
-            croppedImage.src = cropCanvas.toDataURL();
-            croppedImage.onload = function() {
-                fitImageToCanvas(croppedImage);
-                document.getElementById('cropContainer').style.display = 'none';
-            };
-        }
-
-        function fitImageToCanvas(image) {
-            let aspectRatio = image.width / image.height;
-            canvas.width = window.innerWidth * 0.9;
-            canvas.height = canvas.width / aspectRatio;
-            if (canvas.height > window.innerHeight * 0.9) {
-                canvas.height = window.innerHeight * 0.9;
-                canvas.width = canvas.height * aspectRatio;
-            }
-            updateCanvas();
-        }
-
-        function updateCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(croppedImage, 0, 0, canvas.width, canvas.height);
-            if (frame.src) {
-                ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-            }
-        }
-
         document.getElementById('frameSelect').addEventListener('change', function() {
             frame.src = this.value;
             frame.onload = updateCanvas;
         });
+
+        function updateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+        }
 
         function downloadImage() {
             let link = document.createElement('a');
