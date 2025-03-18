@@ -2,20 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghoomar World Record - Photo Frame</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #F5F5DC;
-            overflow: hidden; /* Prevent page movement */
-            touch-action: none;
-            user-select: none; /* Prevent text selection */
+            user-select: none;
+            overflow-y: auto;
+        }
+        .container {
+            margin: 20px auto;
+            width: 100%;
         }
         canvas {
             border: 2px solid #000;
-            margin-top: 10px;
+            width: 500px;
+            height: 499px;
             touch-action: none;
         }
         .input-field, select {
@@ -46,36 +50,26 @@
     <br>
     <input type="file" id="photoUpload" accept="image/*">
     <br>
-    <canvas id="canvas"></canvas>
-    <br>
+
+    <div class="container">
+        <canvas id="canvas" width="500" height="499"></canvas>
+    </div>
+
     <button onclick="downloadImage()">Download Image</button>
 
     <script>
         let canvas = document.getElementById('canvas');
         let ctx = canvas.getContext('2d');
 
-        // Set canvas size for desktop & mobile
-        function setCanvasSize() {
-            if (window.innerWidth < 768) {
-                canvas.width = 800;
-                canvas.height = 450; // 16:9 for mobile
-            } else {
-                canvas.width = 500;
-                canvas.height = 500; // Square for desktop
-            }
-        }
-        setCanvasSize();
-        window.addEventListener("resize", setCanvasSize);
-
         let img = new Image();
         let frame = new Image();
         frame.src = 'frame12.png';
 
-        let imgX, imgY, imgWidth = 150, imgHeight = 150;
+        let imgX = 150, imgY = 150, imgWidth = 150, imgHeight = 150;
         let textX = canvas.width / 2, textY = canvas.height - 50;
         let fontSize = 24, fontFamily = "Arial";
-        let draggingImage = false, draggingText = false;
-        let offsetX, offsetY;
+        let draggingImage = false, resizingImage = false, draggingText = false;
+        let offsetX, offsetY, startWidth, startHeight, startX, startY;
 
         frame.onload = updateCanvas;
 
@@ -84,8 +78,6 @@
             reader.onload = function(e) {
                 img.src = e.target.result;
                 img.onload = function() {
-                    imgX = canvas.width - imgWidth - 50; // Right middle side
-                    imgY = (canvas.height - imgHeight) / 2;
                     updateCanvas();
                 };
             };
@@ -109,6 +101,7 @@
 
             if (img.src) {
                 drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
+                drawResizeHandle();
             }
 
             let userName = document.getElementById('nameInput').value;
@@ -136,16 +129,28 @@
             ctx.restore();
         }
 
+        function drawResizeHandle() {
+            ctx.fillStyle = "red";
+            ctx.fillRect(imgX + imgWidth - 10, imgY + imgHeight - 10, 10, 10);
+        }
+
         function startDrag(e, type) {
             let rect = canvas.getBoundingClientRect();
             let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
             let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
-            if (type === 'image' && mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
+            if (mouseX > imgX + imgWidth - 10 && mouseX < imgX + imgWidth && 
+                mouseY > imgY + imgHeight - 10 && mouseY < imgY + imgHeight) {
+                resizingImage = true;
+                startWidth = imgWidth;
+                startHeight = imgHeight;
+                startX = mouseX;
+                startY = mouseY;
+            } else if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
                 draggingImage = true;
                 offsetX = mouseX - imgX;
                 offsetY = mouseY - imgY;
-            } else if (type === 'text' && mouseX > textX - 50 && mouseX < textX + 50 && mouseY > textY - fontSize && mouseY < textY) {
+            } else if (mouseX > textX - 50 && mouseX < textX + 50 && mouseY > textY - fontSize && mouseY < textY) {
                 draggingText = true;
                 offsetX = mouseX - textX;
                 offsetY = mouseY - textY;
@@ -153,12 +158,15 @@
         }
 
         function onDrag(e) {
-            if (!draggingImage && !draggingText) return;
+            if (!draggingImage && !resizingImage && !draggingText) return;
             let rect = canvas.getBoundingClientRect();
             let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
             let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
-            if (draggingImage) {
+            if (resizingImage) {
+                imgWidth = startWidth + (mouseX - startX);
+                imgHeight = startHeight + (mouseY - startY);
+            } else if (draggingImage) {
                 imgX = mouseX - offsetX;
                 imgY = mouseY - offsetY;
             } else if (draggingText) {
@@ -170,13 +178,14 @@
 
         function stopDrag() {
             draggingImage = false;
+            resizingImage = false;
             draggingText = false;
         }
 
-        canvas.addEventListener("mousedown", (e) => startDrag(e, 'image'));
+        canvas.addEventListener("mousedown", startDrag);
         canvas.addEventListener("mousemove", onDrag);
         canvas.addEventListener("mouseup", stopDrag);
-        canvas.addEventListener("touchstart", (e) => startDrag(e, 'image'), { passive: true });
+        canvas.addEventListener("touchstart", startDrag, { passive: true });
         canvas.addEventListener("touchmove", onDrag, { passive: true });
         canvas.addEventListener("touchend", stopDrag);
 
