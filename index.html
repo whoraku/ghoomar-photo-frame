@@ -28,7 +28,7 @@
     <br>
     <input type="file" id="photoUpload" accept="image/*">
     <br>
-    <canvas id="canvas" width="3464" height="3464"></canvas>
+    <canvas id="canvas" width="500" height="499"></canvas>
     <br>
     <button onclick="downloadImage()">Download Image</button>
 
@@ -57,13 +57,13 @@
         function updateCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 2150, 2600, 300, 300); // Adjusted to fit 3cm x 3cm square
+            ctx.drawImage(img, 20, 100, 460, 300); // Adjust image position and size
             
             let userName = document.getElementById('nameInput').value;
-            ctx.font = 'bold 50px Arial';
+            ctx.font = 'bold 24px Arial';
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
-            ctx.fillText(userName, 2300, 2950); // Positioned just below the photo
+            ctx.fillText(userName, canvas.width / 2, 450); // Position the name below the photo
         }
 
         function downloadImage() {
