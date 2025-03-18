@@ -2,33 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Ghoomar World Record - Photo Frame</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #F5F5DC; }
-        .container { margin-top: 20px; }
-        canvas { border: 2px solid #000; margin-top: 10px; cursor: grab; }
-        .logo {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 100px;
-            height: auto;
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #F5F5DC;
+            overflow: hidden; /* Prevent page movement */
+            touch-action: none; /* Disable unwanted zooming */
         }
-        .input-field { margin-top: 10px; font-size: 18px; padding: 5px; }
-        .title-image { max-width: 100%; height: auto; margin-bottom: 10px; }
+        canvas {
+            border: 2px solid #000;
+            margin-top: 10px;
+            touch-action: none; /* Stops scrolling while interacting */
+        }
+        .input-field, select {
+            margin-top: 10px;
+            font-size: 18px;
+            padding: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <img src="title.jpeg" alt="Event Title" class="title-image">
-    <img src="logo.png" alt="Logo" class="logo">
-    <h3>Enter Your Name, Upload Your Photo and Choose a Frame</h3>
-    
+    <h3>Enter Your Name, Upload Your Photo and Customize</h3>
+
     <input type="text" id="nameInput" class="input-field" placeholder="Enter your name">
+    <select id="fontSelect">
+        <option value="Arial">Arial</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+    </select>
+    <input type="range" id="fontSize" min="20" max="60" value="24">
     <br>
     <input type="file" id="photoUpload" accept="image/*">
     <br>
-    <canvas id="canvas" width="500" height="499"></canvas>
+    <canvas id="canvas" width="500" height="500"></canvas>
     <br>
     <button onclick="downloadImage()">Download Image</button>
 
@@ -39,46 +56,47 @@
         let frame = new Image();
         frame.src = 'frame12.png';
 
-        let frameLoaded = false;
-        let imgLoaded = false;
-        let imgX = 100, imgY = 100, imgWidth = 150, imgHeight = 150; // Default size
-        let dragging = false, resizing = false;
+        let imgX = 100, imgY = 100, imgWidth = 150, imgHeight = 150;
+        let textX = 200, textY = 450;
+        let fontSize = 24, fontFamily = "Arial";
+        let draggingImage = false, resizingImage = false, draggingText = false;
         let offsetX, offsetY;
 
-        frame.onload = function () {
-            frameLoaded = true;
-            updateCanvas();
-        };
+        frame.onload = updateCanvas;
 
         document.getElementById('photoUpload').addEventListener('change', function(event) {
             let reader = new FileReader();
             reader.onload = function(e) {
                 img.src = e.target.result;
-                img.onload = function() {
-                    imgLoaded = true;
-                    updateCanvas();
-                };
+                img.onload = updateCanvas;
             };
             reader.readAsDataURL(event.target.files[0]);
         });
 
         document.getElementById('nameInput').addEventListener('input', updateCanvas);
+        document.getElementById('fontSelect').addEventListener('change', function() {
+            fontFamily = this.value;
+            updateCanvas();
+        });
+
+        document.getElementById('fontSize').addEventListener('input', function() {
+            fontSize = this.value;
+            updateCanvas();
+        });
 
         function updateCanvas() {
-            if (!frameLoaded) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
 
-            if (imgLoaded) {
+            if (img.src) {
                 drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
             }
 
             let userName = document.getElementById('nameInput').value;
-            ctx.font = 'bold 24px Arial';
+            ctx.font = `bold ${fontSize}px ${fontFamily}`;
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
-            ctx.fillText(userName, canvas.width / 2, 450);
+            ctx.fillText(userName, textX, textY);
         }
 
         function drawRoundedImage(ctx, image, x, y, width, height, radius) {
@@ -99,52 +117,49 @@
             ctx.restore();
         }
 
-        // Mouse event listeners for dragging & resizing
-        canvas.addEventListener("mousedown", function (e) {
+        function startDrag(e, type) {
             let rect = canvas.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
+            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
-            if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
-                dragging = true;
+            if (type === 'image' && mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
+                draggingImage = true;
                 offsetX = mouseX - imgX;
                 offsetY = mouseY - imgY;
-                canvas.style.cursor = "grabbing";
-            } else if (mouseX > imgX + imgWidth - 20 && mouseY > imgY + imgHeight - 20) {
-                resizing = true;
-                canvas.style.cursor = "nwse-resize";
+            } else if (type === 'text' && mouseX > textX - 50 && mouseX < textX + 50 && mouseY > textY - fontSize && mouseY < textY) {
+                draggingText = true;
+                offsetX = mouseX - textX;
+                offsetY = mouseY - textY;
             }
-        });
+        }
 
-        canvas.addEventListener("mousemove", function (e) {
+        function onDrag(e) {
+            if (!draggingImage && !draggingText) return;
             let rect = canvas.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
+            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
-            if (dragging) {
+            if (draggingImage) {
                 imgX = mouseX - offsetX;
                 imgY = mouseY - offsetY;
-                updateCanvas();
-            } else if (resizing) {
-                imgWidth = mouseX - imgX;
-                imgHeight = mouseY - imgY;
-                updateCanvas();
-            } else {
-                if (mouseX > imgX + imgWidth - 20 && mouseY > imgY + imgHeight - 20) {
-                    canvas.style.cursor = "nwse-resize";
-                } else if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
-                    canvas.style.cursor = "grab";
-                } else {
-                    canvas.style.cursor = "default";
-                }
+            } else if (draggingText) {
+                textX = mouseX - offsetX;
+                textY = mouseY - offsetY;
             }
-        });
+            updateCanvas();
+        }
 
-        canvas.addEventListener("mouseup", function () {
-            dragging = false;
-            resizing = false;
-            canvas.style.cursor = "grab";
-        });
+        function stopDrag() {
+            draggingImage = false;
+            draggingText = false;
+        }
+
+        canvas.addEventListener("mousedown", (e) => startDrag(e, 'image'));
+        canvas.addEventListener("mousemove", onDrag);
+        canvas.addEventListener("mouseup", stopDrag);
+        canvas.addEventListener("touchstart", (e) => startDrag(e, 'image'), { passive: true });
+        canvas.addEventListener("touchmove", onDrag, { passive: true });
+        canvas.addEventListener("touchend", stopDrag);
 
         function downloadImage() {
             let link = document.createElement('a');
