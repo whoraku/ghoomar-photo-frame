@@ -8,12 +8,20 @@
         body { font-family: Arial, sans-serif; text-align: center; }
         .container { margin-top: 20px; }
         canvas { border: 2px solid #000; margin-top: 10px; width: 90vw; height: 90vh; }
+        #cropContainer { display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
     <h1>Rajasthan Yuva Sangh Surat - Ghoomar World Record</h1>
     <h3>Upload your photo and choose a frame</h3>
     <input type="file" id="photoUpload" accept="image/*">
+    <br>
+    <div id="cropContainer">
+        <h3>Crop Your Image</h3>
+        <canvas id="cropCanvas" style="border:1px solid #000;"></canvas>
+        <br>
+        <button onclick="confirmCrop()">Confirm Crop</button>
+    </div>
     <select id="frameSelect">
         <option value="frame1.png">Frame 1</option>
         <option value="frame2.png">Frame 2</option>
@@ -29,39 +37,23 @@
         let ctx = canvas.getContext('2d');
         let img = new Image();
         let frame = new Image();
-
-        function updateCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            if (frame.src) {
-                ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-            }
-        }
+        let cropCanvas = document.getElementById('cropCanvas');
+        let cropCtx = cropCanvas.getContext('2d');
+        let croppedImage = new Image();
 
         document.getElementById('photoUpload').addEventListener('change', function(event) {
             let reader = new FileReader();
             reader.onload = function(e) {
                 img.src = e.target.result;
                 img.onload = function() {
-                    canvas.width = window.innerWidth * 0.9;
-                    canvas.height = window.innerHeight * 0.9;
-                    updateCanvas();
+                    cropCanvas.width = img.width * 0.5;
+                    cropCanvas.height = img.height * 0.5;
+                    cropCtx.drawImage(img, 0, 0, cropCanvas.width, cropCanvas.height);
+                    document.getElementById('cropContainer').style.display = 'block';
                 };
             };
             reader.readAsDataURL(event.target.files[0]);
         });
 
-        document.getElementById('frameSelect').addEventListener('change', function() {
-            frame.src = this.value;
-            frame.onload = updateCanvas;
-        });
-
-        function downloadImage() {
-            let link = document.createElement('a');
-            link.download = 'framed-photo.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-    </script>
-</body>
-</html>
+        function confirmCrop() {
+            croppedImage.src = cropCanvas.toDataURL();
