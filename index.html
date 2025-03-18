@@ -10,12 +10,13 @@
             text-align: center;
             background-color: #F5F5DC;
             overflow: hidden; /* Prevent page movement */
-            touch-action: none; /* Disable unwanted zooming */
+            touch-action: none;
+            user-select: none; /* Prevent text selection */
         }
         canvas {
             border: 2px solid #000;
             margin-top: 10px;
-            touch-action: none; /* Stops scrolling while interacting */
+            touch-action: none;
         }
         .input-field, select {
             margin-top: 10px;
@@ -45,21 +46,35 @@
     <br>
     <input type="file" id="photoUpload" accept="image/*">
     <br>
-    <canvas id="canvas" width="500" height="500"></canvas>
+    <canvas id="canvas"></canvas>
     <br>
     <button onclick="downloadImage()">Download Image</button>
 
     <script>
         let canvas = document.getElementById('canvas');
         let ctx = canvas.getContext('2d');
+
+        // Set canvas size for desktop & mobile
+        function setCanvasSize() {
+            if (window.innerWidth < 768) {
+                canvas.width = 800;
+                canvas.height = 450; // 16:9 for mobile
+            } else {
+                canvas.width = 500;
+                canvas.height = 500; // Square for desktop
+            }
+        }
+        setCanvasSize();
+        window.addEventListener("resize", setCanvasSize);
+
         let img = new Image();
         let frame = new Image();
         frame.src = 'frame12.png';
 
-        let imgX = 100, imgY = 100, imgWidth = 150, imgHeight = 150;
-        let textX = 200, textY = 450;
+        let imgX, imgY, imgWidth = 150, imgHeight = 150;
+        let textX = canvas.width / 2, textY = canvas.height - 50;
         let fontSize = 24, fontFamily = "Arial";
-        let draggingImage = false, resizingImage = false, draggingText = false;
+        let draggingImage = false, draggingText = false;
         let offsetX, offsetY;
 
         frame.onload = updateCanvas;
@@ -68,7 +83,11 @@
             let reader = new FileReader();
             reader.onload = function(e) {
                 img.src = e.target.result;
-                img.onload = updateCanvas;
+                img.onload = function() {
+                    imgX = canvas.width - imgWidth - 50; // Right middle side
+                    imgY = (canvas.height - imgHeight) / 2;
+                    updateCanvas();
+                };
             };
             reader.readAsDataURL(event.target.files[0]);
         });
