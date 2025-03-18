@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghoomar World Record - Photo Frame</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { margin-top: 20px; }
+        canvas { border: 2px solid #000; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Rajasthan Yuva Sangh Surat - Ghoomar World Record</h1>
+    <h3>Upload your photo and choose a frame</h3>
+    <input type="file" id="photoUpload" accept="image/*">
+    <select id="frameSelect">
+        <option value="frame1.png">Frame 1</option>
+        <option value="frame2.png">Frame 2</option>
+        <option value="frame3.png">Frame 3</option>
+    </select>
+    <button onclick="applyFrame()">Apply Frame</button>
+    <br>
+    <canvas id="canvas"></canvas>
+    <br>
+    <button onclick="downloadImage()">Download Image</button>
+
+    <script>
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let img = new Image();
+        let frame = new Image();
+
+        document.getElementById('photoUpload').addEventListener('change', function(event) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                };
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        });
+
+        function applyFrame() {
+            let frameSelect = document.getElementById('frameSelect').value;
+            frame.src = frameSelect;
+            frame.onload = function() {
+                ctx.drawImage(img, 0, 0);
+                ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+            };
+        }
+
+        function downloadImage() {
+            let link = document.createElement('a');
+            link.download = 'framed-photo.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
