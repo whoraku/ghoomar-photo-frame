@@ -7,7 +7,7 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         .container { margin-top: 20px; }
-        canvas { border: 2px solid #000; margin-top: 10px; width: 90vw; height: 90vh; }
+        canvas { border: 2px solid #000; margin-top: 10px; max-width: 90vw; max-height: 90vh; }
         #cropContainer { display: none; margin-top: 20px; }
     </style>
 </head>
@@ -57,3 +57,42 @@
 
         function confirmCrop() {
             croppedImage.src = cropCanvas.toDataURL();
+            croppedImage.onload = function() {
+                fitImageToCanvas(croppedImage);
+                document.getElementById('cropContainer').style.display = 'none';
+            };
+        }
+
+        function fitImageToCanvas(image) {
+            let aspectRatio = image.width / image.height;
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = canvas.width / aspectRatio;
+            if (canvas.height > window.innerHeight * 0.9) {
+                canvas.height = window.innerHeight * 0.9;
+                canvas.width = canvas.height * aspectRatio;
+            }
+            updateCanvas();
+        }
+
+        function updateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(croppedImage, 0, 0, canvas.width, canvas.height);
+            if (frame.src) {
+                ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        document.getElementById('frameSelect').addEventListener('change', function() {
+            frame.src = this.value;
+            frame.onload = updateCanvas;
+        });
+
+        function downloadImage() {
+            let link = document.createElement('a');
+            link.download = 'framed-photo.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
