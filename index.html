@@ -128,10 +128,10 @@
             ctx.restore();
         }
 
-        canvas.addEventListener("mousedown", function(e) {
+        function startDrag(e) {
             let rect = canvas.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
+            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
             if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
                 draggingImage = true;
@@ -142,13 +142,13 @@
                 offsetX = mouseX - textX;
                 offsetY = mouseY - textY;
             }
-        });
+        }
 
-        canvas.addEventListener("mousemove", function(e) {
+        function onDrag(e) {
             if (!draggingImage && !draggingText) return;
             let rect = canvas.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
+            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
             if (draggingImage) {
                 imgX = mouseX - offsetX;
@@ -158,12 +158,19 @@
                 textY = mouseY - offsetY;
             }
             updateCanvas();
-        });
+        }
 
-        canvas.addEventListener("mouseup", function() {
+        function stopDrag() {
             draggingImage = false;
             draggingText = false;
-        });
+        }
+
+        canvas.addEventListener("mousedown", startDrag);
+        canvas.addEventListener("mousemove", onDrag);
+        canvas.addEventListener("mouseup", stopDrag);
+        canvas.addEventListener("touchstart", startDrag, { passive: true });
+        canvas.addEventListener("touchmove", onDrag, { passive: true });
+        canvas.addEventListener("touchend", stopDrag);
     </script>
 </body>
 </html>
