@@ -1,194 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ghoomar World Record - Photo Frame</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #F5F5DC;
-            user-select: none;
-            overflow-y: auto;
-        }
-        .container {
-            position: relative;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        canvas {
-            border: 2px solid #000;
-            width: 500px;
-            height: 499px;
-            touch-action: none;
-        }
-        .input-field, select {
-            margin-top: 10px;
-            font-size: 18px;
-            padding: 5px;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px 15px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .banner {
-            width: 100%;
-            max-width: 800px;
-            margin: auto;
-            display: block;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f5f5dc;
+        user-select: none;
+        overflow-y: auto;
+        margin: 0;
+        padding-top: 120px; /* Space for fixed image */
+      }
+      .title-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background: url('title.jpeg') no-repeat center center;
+        background-size: contain;
+        z-index: 1000;
+      }
+      .container {
+        margin: 20px auto;
+        width: 100%;
+      }
+      canvas {
+        border: 2px solid #000;
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        touch-action: none;
+      }
+      .input-field,
+      select {
+        margin-top: 10px;
+        font-size: 18px;
+        padding: 5px;
+      }
+      button {
+        margin-top: 10px;
+        padding: 10px 15px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #fontColor {
+        margin-top: 10px;
+      }
     </style>
-</head>
-<body>
-
-    <!-- Banner at the Top -->
-    <img src="title.jpeg" class="banner" alt="Event Banner">
-
+  </head>
+  <body>
+    <div class="title-image"></div>
+    
     <h3>Enter Your Name, Upload Your Photo and Customize</h3>
 
-    <input type="text" id="nameInput" class="input-field" placeholder="Enter your name">
+    <input type="text" id="nameInput" class="input-field" placeholder="Enter your name" />
     <select id="fontSelect">
-        <option value="Arial">Arial</option>
-        <option value="Times New Roman">Times New Roman</option>
-        <option value="Courier New">Courier New</option>
-        <option value="Georgia">Georgia</option>
-        <option value="Comic Sans MS">Comic Sans MS</option>
+      <option value="Arial">Arial</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Comic Sans MS">Comic Sans MS</option>
     </select>
-    <input type="range" id="fontSize" min="10" max="40" value="20">
-    <br>
-    <input type="file" id="photoUpload" accept="image/*">
-    <br>
+    <input type="color" id="fontColor" value="#000000" />
+    <input type="range" id="fontSize" min="10" max="40" value="20" />
+    <br />
+    <input type="file" id="photoUpload" accept="image/*" />
+    <br />
 
     <div class="container">
-        <canvas id="canvas" width="500" height="499"></canvas>
+      <canvas id="canvas" width="500" height="499"></canvas>
     </div>
 
     <button onclick="downloadImage()">Download Image</button>
 
     <script>
-        let canvas = document.getElementById('canvas');
-        let ctx = canvas.getContext('2d');
+      let canvas = document.getElementById("canvas");
+      let ctx = canvas.getContext("2d");
 
-        let frame = new Image();
-        frame.src = 'frame12.png';
+      let img = new Image();
+      let frame = new Image();
+      frame.src = "frame12.png";
 
-        let img = new Image();
-        let imgX = 150, imgY = 150, imgWidth = 150, imgHeight = 150;
-        let textX = canvas.width / 2, textY = canvas.height - 50;
-        let fontSize = 20, fontFamily = "Arial";
+      let imgX = 150, imgY = 150, imgWidth = 150, imgHeight = 150;
+      let textX = canvas.width / 2, textY = canvas.height - 50;
+      let fontSize = 20, fontFamily = "Arial", fontColor = "#000000";
+      
+      frame.onload = updateCanvas;
 
-        let draggingImage = false, draggingText = false;
-        let offsetX, offsetY;
-
-        frame.onload = updateCanvas;
-
-        document.getElementById('photoUpload').addEventListener('change', function(event) {
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                img.src = e.target.result;
-                img.onload = updateCanvas;
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        });
-
-        document.getElementById('nameInput').addEventListener('input', updateCanvas);
-        document.getElementById('fontSelect').addEventListener('change', function() {
-            fontFamily = this.value;
+      document.getElementById("photoUpload").addEventListener("change", function (event) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+          img.src = e.target.result;
+          img.onload = function () {
+            imgWidth = 132;
+            imgHeight = 148;
+            imgX = canvas.width - imgWidth - 28;
+            imgY = canvas.height - imgHeight - 105;
             updateCanvas();
-        });
+          };
+        };
+        reader.readAsDataURL(event.target.files[0]);
+      });
 
-        document.getElementById('fontSize').addEventListener('input', function() {
-            fontSize = this.value;
-            updateCanvas();
-        });
+      document.getElementById("nameInput").addEventListener("input", updateCanvas);
+      document.getElementById("fontSelect").addEventListener("change", function () {
+        fontFamily = this.value;
+        updateCanvas();
+      });
+      document.getElementById("fontColor").addEventListener("input", function () {
+        fontColor = this.value;
+        updateCanvas();
+      });
+      document.getElementById("fontSize").addEventListener("input", function () {
+        fontSize = this.value;
+        updateCanvas();
+      });
 
-        function updateCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+      function updateCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
 
-            if (img.src) {
-                drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
-            }
-
-            let userName = document.getElementById('nameInput').value;
-            ctx.font = `bold ${fontSize}px ${fontFamily}`;
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.fillText(userName, textX, textY);
+        if (img.src) {
+          drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
         }
 
-        function drawRoundedImage(ctx, image, x, y, width, height, radius) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(image, x, y, width, height);
-            ctx.restore();
-        }
+        let userName = document.getElementById("nameInput").value;
+        ctx.font = `bold ${fontSize}px ${fontFamily}`;
+        ctx.fillStyle = fontColor;
+        ctx.textAlign = "center";
+        ctx.fillText(userName, textX, textY);
+      }
 
-        function startDrag(e) {
-            let rect = canvas.getBoundingClientRect();
-            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+      function drawRoundedImage(ctx, image, x, y, width, height, radius) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x + width / 2, y + height / 2, width / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(image, x, y, width, height);
+        ctx.restore();
+      }
 
-            if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
-                draggingImage = true;
-                offsetX = mouseX - imgX;
-                offsetY = mouseY - imgY;
-            } else if (mouseX > textX - 50 && mouseX < textX + 50 && mouseY > textY - fontSize && mouseY < textY) {
-                draggingText = true;
-                offsetX = mouseX - textX;
-                offsetY = mouseY - textY;
-            }
-        }
-
-        function onDrag(e) {
-            if (!draggingImage && !draggingText) return;
-
-            let rect = canvas.getBoundingClientRect();
-            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-            if (draggingImage) {
-                imgX = mouseX - offsetX;
-                imgY = mouseY - offsetY;
-            } else if (draggingText) {
-                textX = mouseX - offsetX;
-                textY = mouseY - offsetY;
-            }
-            updateCanvas();
-        }
-
-        function stopDrag() {
-            draggingImage = false;
-            draggingText = false;
-        }
-
-        canvas.addEventListener("mousedown", startDrag);
-        canvas.addEventListener("mousemove", onDrag);
-        canvas.addEventListener("mouseup", stopDrag);
-        canvas.addEventListener("touchstart", startDrag, { passive: true });
-        canvas.addEventListener("touchmove", onDrag, { passive: true });
-        canvas.addEventListener("touchend", stopDrag);
-
-        function downloadImage() {
-            let link = document.createElement('a');
-            link.download = 'framed-photo.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
+      function downloadImage() {
+        let link = document.createElement("a");
+        link.download = "framed-photo.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      }
     </script>
-</body>
+  </body>
 </html>
