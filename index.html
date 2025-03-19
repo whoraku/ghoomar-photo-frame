@@ -46,7 +46,7 @@
         <option value="Georgia">Georgia</option>
         <option value="Comic Sans MS">Comic Sans MS</option>
     </select>
-    <input type="range" id="fontSize" min="20" max="60" value="24">
+    <input type="range" id="fontSize" min="10" max="40" value="20">
     <br>
     <input type="file" id="photoUpload" accept="image/*">
     <br>
@@ -67,7 +67,7 @@
 
         let imgX = 378, imgY = 175, imgWidth = 122, imgHeight = 149;
         let textX = canvas.width / 2, textY = canvas.height - 50;
-        let fontSize = 24, fontFamily = "Arial";
+        let fontSize = 20, fontFamily = "Arial";
         let draggingImage = false, draggingText = false;
         let offsetX, offsetY;
 
@@ -164,13 +164,6 @@
             draggingImage = false;
             draggingText = false;
         }
-
-        canvas.addEventListener("mousedown", startDrag);
-        canvas.addEventListener("mousemove", onDrag);
-        canvas.addEventListener("mouseup", stopDrag);
-        canvas.addEventListener("touchstart", startDrag, { passive: true });
-        canvas.addEventListener("touchmove", onDrag, { passive: true });
-        canvas.addEventListener("touchend", stopDrag);
     </script>
 </body>
 </html>
