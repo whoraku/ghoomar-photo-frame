@@ -11,13 +11,6 @@
         background-color: #f5f5dc;
         user-select: none;
         overflow-y: auto;
-        margin: 0;
-        padding: 0;
-      }
-      .title-image {
-        width: 100%;
-        height: auto;
-        display: block;
       }
       .container {
         margin: 20px auto;
@@ -44,8 +37,8 @@
     </style>
   </head>
   <body>
-    <img src="title.jpeg" alt="Ghoomar Title" class="title-image" />
     <h3>Enter Your Name, Upload Your Photo and Customize</h3>
+
     <input
       type="text"
       id="nameInput"
@@ -63,9 +56,210 @@
     <br />
     <input type="file" id="photoUpload" accept="image/*" />
     <br />
+
     <div class="container">
       <canvas id="canvas" width="500" height="499"></canvas>
     </div>
+
     <button onclick="downloadImage()">Download Image</button>
+
+    <script>
+      let canvas = document.getElementById("canvas");
+      let ctx = canvas.getContext("2d");
+
+      let img = new Image();
+      let frame = new Image();
+      frame.src = "frame12.png";
+
+      let imgX = 150,
+        imgY = 150,
+        imgWidth = 150,
+        imgHeight = 150;
+      let textX = canvas.width / 2,
+        textY = canvas.height - 50;
+      let fontSize = 24,
+        fontFamily = "Arial";
+      let draggingImage = false,
+        resizingImage = false,
+        draggingText = false;
+      let offsetX, offsetY, startWidth, startHeight, startX, startY;
+
+      frame.onload = updateCanvas;
+
+      document
+        .getElementById("photoUpload")
+        .addEventListener("change", function (event) {
+          let reader = new FileReader();
+          reader.onload = function (e) {
+            img.src = e.target.result;
+            img.onload = function () {
+              imgWidth = 132;
+              imgHeight = 148;
+
+              imgX = canvas.width - imgWidth - 28;
+              imgY = canvas.height - imgHeight - 105;
+              updateCanvas();
+            };
+          };
+          reader.readAsDataURL(event.target.files[0]);
+        });
+
+      document
+        .getElementById("nameInput")
+        .addEventListener("input", updateCanvas);
+      document
+        .getElementById("fontSelect")
+        .addEventListener("change", function () {
+          fontFamily = this.value;
+          updateCanvas();
+        });
+
+      document
+        .getElementById("fontSize")
+        .addEventListener("input", function () {
+          fontSize = this.value;
+          updateCanvas();
+        });
+
+    function updateCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+
+  // Draw photo if available
+  if (img.src) {
+    drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
+    drawResizeHandle();
+  }
+
+  let userName = document.getElementById("nameInput").value;
+  ctx.font = `bold ${fontSize}px ${fontFamily}`;
+  ctx.fillStyle = "black";
+  ctx.textAlign = "center";
+
+  let nameX, nameY;
+  if (img.src) {
+    nameX = imgX + imgWidth / 2;
+    nameY = imgY + imgHeight + parseInt(fontSize, 10) + 5; // Slight spacing below image
+  } else {
+    nameX = canvas.width / 2 +150; 
+    nameY = canvas.height / 2 + 175;
+  }
+
+  ctx.fillText(userName, nameX, nameY);
+}
+
+
+      function drawRoundedImage(ctx, image, x, y, width, height, radius) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(
+          x + width,
+          y + height,
+          x + width - radius,
+          y + height
+        );
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(image, x, y, width, height);
+        ctx.restore();
+      }
+
+      function drawResizeHandle() {
+        ctx.fillStyle = "red";
+        ctx.fillRect(imgX + imgWidth - 10, imgY + imgHeight - 10, 10, 10);
+      }
+
+      function startDrag(e, type) {
+        let rect = canvas.getBoundingClientRect();
+        let mouseX = e.touches
+          ? e.touches[0].clientX - rect.left
+          : e.clientX - rect.left;
+        let mouseY = e.touches
+          ? e.touches[0].clientY - rect.top
+          : e.clientY - rect.top;
+
+        if (
+          mouseX > imgX + imgWidth - 10 &&
+          mouseX < imgX + imgWidth &&
+          mouseY > imgY + imgHeight - 10 &&
+          mouseY < imgY + imgHeight
+        ) {
+          resizingImage = true;
+          startWidth = imgWidth;
+          startHeight = imgHeight;
+          startX = mouseX;
+          startY = mouseY;
+        } else if (
+          mouseX > imgX &&
+          mouseX < imgX + imgWidth &&
+          mouseY > imgY &&
+          mouseY < imgY + imgHeight
+        ) {
+          draggingImage = true;
+          offsetX = mouseX - imgX;
+          offsetY = mouseY - imgY;
+        } else if (
+          mouseX > textX - 50 &&
+          mouseX < textX + 50 &&
+          mouseY > textY - fontSize &&
+          mouseY < textY
+        ) {
+          draggingText = true;
+          offsetX = mouseX - textX;
+          offsetY = mouseY - textY;
+        }
+      }
+
+      function onDrag(e) {
+        if (!draggingImage && !resizingImage && !draggingText) return;
+        let rect = canvas.getBoundingClientRect();
+        let mouseX = e.touches
+          ? e.touches[0].clientX - rect.left
+          : e.clientX - rect.left;
+        let mouseY = e.touches
+          ? e.touches[0].clientY - rect.top
+          : e.clientY - rect.top;
+
+        if (resizingImage) {
+          imgWidth = startWidth + (mouseX - startX);
+          imgHeight = startHeight + (mouseY - startY);
+        } else if (draggingImage) {
+          imgX = mouseX - offsetX;
+          imgY = mouseY - offsetY;
+        } else if (draggingText) {
+          textX = mouseX - offsetX;
+          textY = mouseY - offsetY;
+        }
+        updateCanvas();
+      }
+
+      function stopDrag() {
+        draggingImage = false;
+        resizingImage = false;
+        draggingText = false;
+      }
+
+      canvas.addEventListener("mousedown", startDrag);
+      canvas.addEventListener("mousemove", onDrag);
+      canvas.addEventListener("mouseup", stopDrag);
+      canvas.addEventListener("touchstart", startDrag, { passive: true });
+      canvas.addEventListener("touchmove", onDrag, { passive: true });
+      canvas.addEventListener("touchend", stopDrag);
+
+      function downloadImage() {
+        let link = document.createElement("a");
+        link.download = "framed-photo.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      }
+    </script>
   </body>
 </html>
