@@ -85,8 +85,8 @@
       let frame = new Image();
       frame.src = "frame12.png";
 
-      let imgX = 150, imgY = 150, imgWidth = 150, imgHeight = 150;
-      let textX = canvas.width / 2, textY = canvas.height - 50;
+      let imgX = 150, imgY = 100, imgWidth = 200, imgHeight = 200;
+      let textX = canvas.width / 2, textY = imgY + imgHeight + 40;
       let fontSize = 20, fontFamily = "Arial", fontColor = "#000000";
       
       frame.onload = updateCanvas;
@@ -96,10 +96,6 @@
         reader.onload = function (e) {
           img.src = e.target.result;
           img.onload = function () {
-            imgWidth = 132;
-            imgHeight = 148;
-            imgX = canvas.width - imgWidth - 28;
-            imgY = canvas.height - imgHeight - 105;
             updateCanvas();
           };
         };
@@ -125,7 +121,7 @@
         ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
 
         if (img.src) {
-          drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
+          drawRoundedRectImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 30);
         }
 
         let userName = document.getElementById("nameInput").value;
@@ -135,10 +131,18 @@
         ctx.fillText(userName, textX, textY);
       }
 
-      function drawRoundedImage(ctx, image, x, y, width, height, radius) {
+      function drawRoundedRectImage(ctx, image, x, y, width, height, radius) {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(x + width / 2, y + height / 2, width / 2, 0, Math.PI * 2);
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
         ctx.closePath();
         ctx.clip();
         ctx.drawImage(image, x, y, width, height);
