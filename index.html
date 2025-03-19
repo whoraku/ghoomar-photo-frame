@@ -36,6 +36,7 @@
     </style>
 </head>
 <body>
+    <img src="title.jpeg" alt="Event Banner" style="width: 100%; max-width: 800px; display: block; margin: 0 auto;">
     <h3>Enter Your Name, Upload Your Photo and Customize</h3>
 
     <input type="text" id="nameInput" class="input-field" placeholder="Enter your name">
@@ -56,114 +57,5 @@
     </div>
 
     <button onclick="downloadImage()">Download Image</button>
-
-    <script>
-        let canvas = document.getElementById('canvas');
-        let ctx = canvas.getContext('2d');
-
-        let img = new Image();
-        let frame = new Image();
-        frame.src = 'frame12.png';
-
-        let imgX = 378, imgY = 175, imgWidth = 122, imgHeight = 149;
-        let textX = canvas.width / 2, textY = canvas.height - 50;
-        let fontSize = 20, fontFamily = "Arial";
-        let draggingImage = false, draggingText = false;
-        let offsetX, offsetY;
-
-        frame.onload = updateCanvas;
-
-        document.getElementById('photoUpload').addEventListener('change', function(event) {
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                img.src = e.target.result;
-                img.onload = function() {
-                    updateCanvas();
-                };
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        });
-
-        document.getElementById('nameInput').addEventListener('input', updateCanvas);
-        document.getElementById('fontSelect').addEventListener('change', function() {
-            fontFamily = this.value;
-            updateCanvas();
-        });
-
-        document.getElementById('fontSize').addEventListener('input', function() {
-            fontSize = this.value;
-            updateCanvas();
-        });
-
-        function updateCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-
-            if (img.src) {
-                drawRoundedImage(ctx, img, imgX, imgY, imgWidth, imgHeight, 20);
-            }
-
-            let userName = document.getElementById('nameInput').value;
-            ctx.font = `bold ${fontSize}px ${fontFamily}`;
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.fillText(userName, textX, textY);
-        }
-
-        function drawRoundedImage(ctx, image, x, y, width, height, radius) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(image, x, y, width, height);
-            ctx.restore();
-        }
-
-        function startDrag(e) {
-            let rect = canvas.getBoundingClientRect();
-            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-            if (mouseX > imgX && mouseX < imgX + imgWidth && mouseY > imgY && mouseY < imgY + imgHeight) {
-                draggingImage = true;
-                offsetX = mouseX - imgX;
-                offsetY = mouseY - imgY;
-            } else if (mouseX > textX - 50 && mouseX < textX + 50 && mouseY > textY - fontSize && mouseY < textY) {
-                draggingText = true;
-                offsetX = mouseX - textX;
-                offsetY = mouseY - textY;
-            }
-        }
-
-        function onDrag(e) {
-            if (!draggingImage && !draggingText) return;
-            let rect = canvas.getBoundingClientRect();
-            let mouseX = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-            let mouseY = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-            if (draggingImage) {
-                imgX = mouseX - offsetX;
-                imgY = mouseY - offsetY;
-            } else if (draggingText) {
-                textX = mouseX - offsetX;
-                textY = mouseY - offsetY;
-            }
-            updateCanvas();
-        }
-
-        function stopDrag() {
-            draggingImage = false;
-            draggingText = false;
-        }
-    </script>
 </body>
 </html>
