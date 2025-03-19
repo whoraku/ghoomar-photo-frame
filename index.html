@@ -22,11 +22,32 @@
             height: 499px;
             touch-action: none;
         }
+        .input-field, select {
+            margin-top: 10px;
+            font-size: 18px;
+            padding: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h3>Enter Your Name, Upload Your Photo and Customize</h3>
 
+    <input type="text" id="nameInput" class="input-field" placeholder="Enter your name">
+    <select id="fontSelect">
+        <option value="Arial">Arial</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+    </select>
+    <input type="range" id="fontSize" min="20" max="60" value="24">
+    <br>
     <input type="file" id="photoUpload" accept="image/*">
     <br>
 
@@ -45,6 +66,10 @@
         frame.src = 'frame12.png';
 
         let imgX = 378, imgY = 175, imgWidth = 122, imgHeight = 149;
+        let textX = canvas.width / 2, textY = canvas.height - 50;
+        let fontSize = 24, fontFamily = "Arial";
+        let draggingImage = false, resizingImage = false, draggingText = false;
+        let offsetX, offsetY, startWidth, startHeight, startX, startY;
 
         frame.onload = updateCanvas;
 
@@ -59,6 +84,17 @@
             reader.readAsDataURL(event.target.files[0]);
         });
 
+        document.getElementById('nameInput').addEventListener('input', updateCanvas);
+        document.getElementById('fontSelect').addEventListener('change', function() {
+            fontFamily = this.value;
+            updateCanvas();
+        });
+
+        document.getElementById('fontSize').addEventListener('input', function() {
+            fontSize = this.value;
+            updateCanvas();
+        });
+
         function updateCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
@@ -66,6 +102,12 @@
             if (img.src) {
                 ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
             }
+
+            let userName = document.getElementById('nameInput').value;
+            ctx.font = `bold ${fontSize}px ${fontFamily}`;
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.fillText(userName, textX, textY);
         }
 
         function downloadImage() {
